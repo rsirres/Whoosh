@@ -93,7 +93,7 @@ class BaseScorer(object):
     a scorer instance.
     """
     
-    def supports_quality(self):
+    def supports_block_quality(self):
         """Returns True if this class supports quality optimizations.
         """
         
@@ -128,14 +128,14 @@ class WOLScorer(BaseScorer):
     document.
     """
     
-    def supports_quality(self):
+    def supports_block_quality(self):
         return True
     
     def quality(self, matcher):
         return matcher.weight() / self.dfl(matcher.id())
     
     def block_quality(self, matcher):
-        return matcher.block_maxwol()
+        return matcher.block_max_wol()
 
 
 # WeightScorer
@@ -146,7 +146,7 @@ class WeightScorer(BaseScorer):
     scorer for fields that aren't scorable (don't store field lengths).
     """
     
-    def supports_quality(self):
+    def supports_block_quality(self):
         return True
     
     def score(self, matcher):
@@ -156,7 +156,7 @@ class WeightScorer(BaseScorer):
         return matcher.weight()
     
     def block_quality(self, matcher):
-        return matcher.block_maxweight()
+        return matcher.block_max_weight()
 
 
 # WeightingModel implementations
@@ -285,7 +285,7 @@ class TF_IDF(WeightingModel):
         def __init__(self, idf):
             self.idf = idf
         
-        def supports_quality(self):
+        def supports_block_quality(self):
             return True
         
         def score(self, matcher):
@@ -378,8 +378,8 @@ class ReverseWeighting(WeightingModel):
         def __init__(self, subscorer):
             self.subscorer = subscorer
         
-        def supports_quality(self):
-            return self.subscorer.supports_quality()
+        def supports_block_quality(self):
+            return self.subscorer.supports_block_quality()
         
         def score(self, matcher):
             return 0 - self.subscorer.score(matcher)
