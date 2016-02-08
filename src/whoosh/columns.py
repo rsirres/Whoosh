@@ -293,7 +293,6 @@ class VarBytesColumn(Column):
             lengthsbase = endoflens - (itemsize * doccount)
             self._lengths = dbfile.get_array(lengthsbase, typecode, doccount)
 
-        @lru_cache()
         def __getitem__(self, docnum):
             length = self._lengths[docnum]
             if not length:
@@ -1201,7 +1200,7 @@ class PickleColumn(WrappedColumn):
             if v is None:
                 v = emptybytes
             else:
-                v = dumps(v, -1)
+                v = dumps(v, 2)
             self._child.add(docnum, v)
 
     class Reader(WrappedColumnReader):

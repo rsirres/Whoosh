@@ -495,6 +495,7 @@ class IDLIST(FieldType):
         """
 
         expression = expression or re.compile(r"[^\r\n\t ,;]+")
+        self.analyzer = analysis.RegexAnalyzer(expression=expression)
         # Don't store any information other than the doc ID
         self.format = formats.Existence(field_boost=field_boost)
         self.stored = stored
@@ -1320,7 +1321,7 @@ class Schema(object):
 
     def __init__(self, **fields):
         """
-         All keyword arguments to the constructor are treated as fieldname =
+        All keyword arguments to the constructor are treated as fieldname =
         fieldtype pairs. The fieldtype can be an instantiated FieldType object,
         or a FieldType sub-class (in which case the Schema will instantiate it
         with the default constructor before adding it).
@@ -1399,6 +1400,11 @@ class Schema(object):
             return field is not None
         except KeyError:
             return False
+
+    def __setstate__(self, state):
+        if "_subfields" not in state:
+            state["_subfields"] = {}
+        self.__dict__.update(state)
 
     def to_bytes(self, fieldname, value):
         return self[fieldname].to_bytes(value)
@@ -1558,6 +1564,7 @@ class SchemaClass(with_metaclass(MetaSchema, Schema)):
     >>> s = MySchema()
     >>> type(s)
     <class 'whoosh.fields.Schema'>
+    
     """
 
     def __new__(cls, *args, **kwargs):

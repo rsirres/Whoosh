@@ -7,6 +7,7 @@ from whoosh import fields, qparser, query
 from whoosh.compat import long_type, u, b, xrange
 from whoosh.filedb.filestore import RamStorage
 from whoosh.util import times
+from whoosh.util.testing import TempIndex
 
 
 def test_schema_eq():
@@ -576,6 +577,23 @@ def test_boolean_multifield():
         assert len(r) == 2
 
 
+def test_idlist():
+    schema = fields.Schema(paths=fields.IDLIST(stored=True))
+    ix = RamStorage().create_index(schema)
+
+    with ix.writer() as w:
+        w.add_document(paths=u('here there everywhere'))
+        w.add_document(paths=u('here'))
+        w.add_document(paths=u('there'))
+
+    with ix.searcher() as s:
+        qp = qparser.QueryParser('paths', schema)
+        q = qp.parse(u('here'))
+
+        r = s.search(q)
+        assert sorted(hit['paths'] for hit in r) == ['here', 'here there everywhere']
+
+
 def test_missing_field():
     schema = fields.Schema()
     ix = RamStorage().create_index(schema)
@@ -595,3 +613,12 @@ def test_token_boost():
                        (b('SPRS'), 1, 1.0, b('\x00\x00\x00\x01')),
                        ]
 
+
+def test_pickle_idlist():
+    schema = fields.Schema(
+        pk=fields.ID(stored=True, unique=True),
+        text=fields.TEXT(),
+        tags=fields.IDLIST(stored=True),
+    )
+    with TempIndex(schema) as ix:
+        assert ix
