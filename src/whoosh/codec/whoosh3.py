@@ -222,6 +222,10 @@ class W3PerDocWriter(base.PerDocWriterWithColumns):
             self._fieldlengths[fieldname] += length
 
     def add_vector_items(self, fieldname, fieldobj, items):
+        if not items:
+            # Don't do anything if the list of items is empty
+            return
+
         if self._vpostfile is None:
             self._prep_vectors()
 
@@ -751,7 +755,7 @@ class W3PostingsWriter(base.PostingsWriter):
         # Minify the IDs, weights, and values, and put them in a tuple
         data = (self._mini_ids(), self._mini_weights(), self._mini_values())
         # Pickle the tuple
-        databytes = dumps(data)
+        databytes = dumps(data, 2)
         # If the pickle is less than 20 bytes, don't bother compressing
         if len(databytes) < 20:
             comp = 0
@@ -774,7 +778,7 @@ class W3PostingsWriter(base.PostingsWriter):
         infobytes = dumps((len(ids), ids[-1], self._maxweight, comp,
                            length_to_byte(self._minlength),
                            length_to_byte(self._maxlength),
-                           ))
+                           ), 2)
 
         # Write block length
         postfile = self._postfile
@@ -1181,7 +1185,7 @@ class W3TermInfo(TermInfo):
 
         if isinlined:
             # Postings are inlined - dump them using the pickle protocol
-            postbytes = dumps(self._inlined, -1)
+            postbytes = dumps(self._inlined, 2)
         else:
             postbytes = pack_long(self._offset) + pack_int(self._length)
         st += postbytes

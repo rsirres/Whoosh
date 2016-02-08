@@ -1735,3 +1735,32 @@ def test_find_decimals():
         assert names == "delta foxtrot"
 
 
+def test_limit_scores():
+    domain = u"alfa bravo charlie delta echo foxtrot golf".split()
+
+    schema = fields.Schema(desc=fields.TEXT, parent=fields.KEYWORD(stored=True))
+    with TempIndex(schema) as ix:
+        with ix.writer() as w:
+            count = 0
+            for words in permutations(domain, 4):
+                count += 1
+                w.add_document(desc=u" ".join(words), parent=text_type(count))
+
+        with ix.searcher() as s:
+            q = query.And([
+                query.Term("desc", u"delta", boost=30.0),
+                query.Term("parent", u"545")
+            ])
+            r = s.search(q, limit=500)
+            assert r.scored_length() == 1
+            limited_score = r[0].score
+
+            r = s.search(q, limit=None)
+            assert r.scored_length() == 1
+            unlimited_score = r[0].score
+
+            assert limited_score == unlimited_score
+
+
+
+

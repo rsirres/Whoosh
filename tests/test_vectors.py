@@ -61,7 +61,9 @@ def test_vector_merge():
 
 
 def test_vector_unicode():
-    cf = fields.TEXT(vector=True)
+    from whoosh import analysis
+
+    cf = fields.TEXT(analyzer=analysis.RegexTokenizer(), vector=True)
     schema = fields.Schema(id=fields.NUMERIC, text=cf)
     with TempIndex(schema) as ix:
         with ix.writer() as w:
@@ -101,3 +103,10 @@ def test_add_vectored_field():
         docnum2 = s.document_number(id="b")
         assert not s.has_vector(docnum2, "f1")
         assert s.has_vector(docnum2, "f2")
+
+
+def test_write_empty_vector():
+    schema = fields.Schema(text=fields.TEXT(vector=True))
+    with TempIndex(schema) as ix:
+        with ix.writer() as w:
+            w.add_document(text=u". . . . . . . . . . . . . . . . . . . . . . . . 1")

@@ -443,7 +443,6 @@ class Searcher(object):
                 delset.add(docnum)
         return delset
 
-    @lru_cache(20)
     def _query_to_comb(self, fq):
         return BitSet(self.docs_for_query(fq), size=self.doc_count_all())
 
@@ -833,11 +832,6 @@ class Searcher(object):
           use custom correctors, use the ``correctors`` argument to pass a
           dictionary mapping field names to :class:`whoosh.spelling.Corrector`
           objects.
-
-        * ONLY CORRECTS FIELDS THAT HAVE THE ``spelling`` ATTRIBUTE in the
-          schema (or for which you pass a custom corrector). To automatically
-          check all fields, use ``allfields=True``. Spell checking fields
-          without ``spelling`` is slower.
 
         Expert users who want more sophisticated correction behavior can create
         a custom :class:`whoosh.spelling.QueryCorrector` and use that instead
